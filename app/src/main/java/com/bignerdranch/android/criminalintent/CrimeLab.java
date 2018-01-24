@@ -43,7 +43,7 @@ public class CrimeLab {
     {
         for(Crime crime : mCrimes)
         {
-            if(crime.getid().equals(id))
+            if(crime.getId().equals(id))
             {
                 return crime;
             }

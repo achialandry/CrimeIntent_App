@@ -3,8 +3,6 @@ package com.bignerdranch.android.criminalintent;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -13,7 +11,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import java.util.List;
 
@@ -24,6 +21,7 @@ import java.util.List;
 public class CrimeListFragment extends Fragment {
     private RecyclerView mCrimeRecyclerView;
     private CrimeAdapter mAdapter;
+    private static final int REQUEST_CRIME = 1;
 
     //implenting a view holder to inflate and own the list_item_crime layout
     private class CrimeHolder extends RecyclerView.ViewHolder implements View.OnClickListener{
@@ -53,9 +51,19 @@ public class CrimeListFragment extends Fragment {
         @Override
         public void onClick(View v) {
             //starting a new Activity of Crime when clicked
-            Intent intent = CrimeActivity.newIntent(getActivity(), mCrime.getid());
+//            Intent intent = CrimeActivity.newIntent(getActivity(), mCrime.getId());
+            Intent intent = CrimePagerActivity.newIntent(getActivity(), mCrime.getId());
 //            Intent intent = new Intent(getActivity(), CrimeActivity.class);
             startActivity(intent);
+//            startActivityForResult(intent, REQUEST_CRIME);
+        }
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if(requestCode == REQUEST_CRIME)
+        {
+            //Handle result
         }
     }
 
@@ -98,13 +106,24 @@ public class CrimeListFragment extends Fragment {
         return view;
     }
 
+    @Override
+    public void onResume() {
+        super.onResume();
+        updateUI();
+    }
+
     private void updateUI()
     {
         CrimeLab crimeLab = CrimeLab.get(getActivity());
         List<Crime> crimes = crimeLab.getCrimes();
 
-        mAdapter = new CrimeAdapter(crimes);
-        mCrimeRecyclerView.setAdapter(mAdapter);
+        if(mAdapter == null){
+            mAdapter = new CrimeAdapter(crimes);
+            mCrimeRecyclerView.setAdapter(mAdapter);
+        }else{
+            mAdapter.notifyDataSetChanged();
+        }
+
     }
 
 
