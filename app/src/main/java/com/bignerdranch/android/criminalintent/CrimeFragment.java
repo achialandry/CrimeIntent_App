@@ -1,6 +1,7 @@
 package com.bignerdranch.android.criminalintent;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.os.Bundle;
 //import android.support.annotation.NonNull;
 //import android.support.annotation.Nullable;
@@ -16,6 +17,7 @@ import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.EditText;
 
+import java.util.Date;
 import java.util.UUID;
 
 /**
@@ -30,6 +32,8 @@ public class CrimeFragment extends Fragment {
     private static final String ARG_CRIME_ID = "crime_id";
     private static final String DIALOG_DATE = "DialogDate";
 
+    private static final int REQUEST_DATE = 0;
+
     public static CrimeFragment newInstance(UUID crimeId)
     {
         Bundle args = new Bundle();
@@ -43,6 +47,8 @@ public class CrimeFragment extends Fragment {
     public void returnResult(){
         getActivity().setResult(Activity.RESULT_OK, null);
     }
+
+
 
 
     @Override
@@ -83,8 +89,10 @@ public class CrimeFragment extends Fragment {
             }
         });
 
+
+
         mDateButton = (Button) v.findViewById(R.id.crime_date);
-        mDateButton.setText(mCrime.getDate().toString());
+        updateDate();
 //        mDateButton.setEnabled(false);
         mDateButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -92,6 +100,8 @@ public class CrimeFragment extends Fragment {
                 FragmentManager manager = getFragmentManager();
 //                DatePickerFragment dialog = new DatePickerFragment();
                 DatePickerFragment dialog = DatePickerFragment.newInstance(mCrime.getDate());
+                //this line will target the Crime fragment to return data of datepicker to CrimeFragment (this is basically the connection)
+                dialog.setTargetFragment(CrimeFragment.this, REQUEST_DATE);
                 dialog.show(manager, DIALOG_DATE);
             }
         });
@@ -107,5 +117,29 @@ public class CrimeFragment extends Fragment {
         });
 
         return v;
+    }
+
+    //overriding the onActivityResult to retrieve the extra from DatePickerFragment.java and set the date on the Crime and refresh the text of the date button
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+
+        if(resultCode != Activity.RESULT_OK)
+        {
+            return;
+        }
+        if(requestCode == REQUEST_DATE)
+        {
+            Date date = (Date) data.getSerializableExtra(DatePickerFragment.EXTRA_DATE);
+            mCrime.setDate(date);
+
+            //code that sets button text is identical to code on onCreateView hence date could be set on two place
+            //so we encapsulate in a private method
+
+            updateDate();
+        }
+    }
+
+    private void updateDate() {
+        mDateButton.setText(mCrime.getDate().toString());
     }
 }
