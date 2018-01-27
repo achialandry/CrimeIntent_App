@@ -64,6 +64,7 @@ public class CrimeFragment extends Fragment {
 
 
 
+
     @Override
     public View onCreateView( LayoutInflater inflater,  ViewGroup container,  Bundle savedInstanceState) {
         //inflating fragments view by calling layoutInflater
@@ -117,6 +118,13 @@ public class CrimeFragment extends Fragment {
         });
 
         return v;
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+
+        CrimeLab.get(getActivity()).updateCrime(mCrime);
     }
 
     //overriding the onActivityResult to retrieve the extra from DatePickerFragment.java and set the date on the Crime and refresh the text of the date button
