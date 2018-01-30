@@ -7,6 +7,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
 import com.bignerdranch.android.criminalintent.database.CrimeBaseHelper;
+import com.bignerdranch.android.criminalintent.database.CrimeCursorWrapper;
 import com.bignerdranch.android.criminalintent.database.CrimeDbSchema;
 import com.bignerdranch.android.criminalintent.database.CrimeDbSchema.CrimeTable;
 
@@ -59,7 +60,20 @@ public class CrimeLab {
     public List<Crime> getCrimes()
     {
 //        return mCrimes;
-        return new ArrayList<>();
+//        return new ArrayList<>();
+        List<Crime> crimes = new ArrayList<>();
+
+        CrimeCursorWrapper cursor = queryCrimes(null, null);
+        try {
+            cursor.moveToFirst();
+            while (!cursor.isAfterLast()){
+                crimes.add(cursor.getCrime());
+                cursor.moveToNext();
+            }
+        }finally {
+            cursor.close();
+        }
+        return crimes;
     }
 
     public Crime getCrime(UUID id)
@@ -71,7 +85,18 @@ public class CrimeLab {
 //                return crime;
 //            }
 //        }
-        return null;
+//        return null;
+
+        CrimeCursorWrapper cursor = queryCrimes(CrimeTable.Cols.UUID + " =?", new String[]{id.toString()});
+        try {
+            if(cursor.getCount() == 0){
+                return null;
+            }
+            cursor.moveToFirst();
+            return cursor.getCrime();
+        }finally {
+            cursor.close();
+        }
     }
 
     public void updateCrime (Crime crime)
@@ -84,7 +109,8 @@ public class CrimeLab {
                 new String[] { uuidString});
     }
 
-    public Cursor queryCrimes( String whereClause, String[] whereArgs){
+//    public Cursor queryCrimes( String whereClause, String[] whereArgs)
+      private CrimeCursorWrapper queryCrimes(String whereClause, String[] whereArgs){
         Cursor cursor = mDatabase.query(
                 CrimeTable.NAME,
                 null, //columns - null selects all columns
@@ -94,7 +120,7 @@ public class CrimeLab {
                 null, //having
                 null //orderBy
         );
-        return cursor;
+        return new CrimeCursorWrapper(cursor);
     }
 
     private static ContentValues getContentValues(Crime crime )
@@ -104,6 +130,7 @@ public class CrimeLab {
         values.put(CrimeTable.Cols.TITLE, crime.getTitle());
         values.put(CrimeTable.Cols.DATE, crime.getDate().getTime());
         values.put(CrimeTable.Cols.SOLVED, crime.isSolved() ? 1 : 0);
+        values.put(CrimeTable.Cols.SUSPECT, crime.getSuspect());
 
         return values;
     }
