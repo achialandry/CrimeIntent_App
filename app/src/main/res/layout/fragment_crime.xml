@@ -23,7 +23,7 @@
                 android:layout_height="80dp"
                 android:scaleType="centerInside"
                 android:cropToPadding="true"
-                android:background="@color:color/darker_gray">
+                android:background="@color/darkerGray">
 
             </ImageView>
 
