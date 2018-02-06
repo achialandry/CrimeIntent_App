@@ -1,7 +1,9 @@
 package com.bignerdranch.android.criminalintent;
 
+import android.app.Activity;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Point;
 
 /**
  * Created by landry on 2018-02-01.
@@ -10,6 +12,9 @@ import android.graphics.BitmapFactory;
 public class PictureUtils {
 
     public static Bitmap getScaledBitmap(String path, int destWidth, int destHeight){
+
+
+
         //Read in the dimensions of the image on disk
         BitmapFactory.Options options = new BitmapFactory.Options();
         options.inJustDecodeBounds = true;
@@ -33,5 +38,12 @@ public class PictureUtils {
         //Read in and create file bitmap
 
         return  BitmapFactory.decodeFile(path, options);
+    }
+
+    //writing a conservative scale method
+    public static Bitmap getScaledBitmap(String path, Activity activity){
+        Point size = new Point();
+        activity.getWindowManager().getDefaultDisplay().getSize(size);
+        return getScaledBitmap(path, size.x, size.y);
     }
 }
