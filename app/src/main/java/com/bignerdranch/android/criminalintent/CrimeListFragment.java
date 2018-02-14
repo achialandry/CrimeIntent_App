@@ -1,11 +1,14 @@
 package com.bignerdranch.android.criminalintent;
 
 
+import android.content.ComponentCallbacks;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -20,6 +23,8 @@ import android.widget.TextView;
 
 import java.util.List;
 
+import javax.security.auth.callback.Callback;
+
 /**
  * Created by landryachia on 2018-01-17.
  */
@@ -28,8 +33,25 @@ public class CrimeListFragment extends Fragment {
     private RecyclerView mCrimeRecyclerView;
     private CrimeAdapter mAdapter;
     private boolean mSubtitleVisible;
+    //take note here
+    private Callbacks mCallbacks;
     private static final int REQUEST_CRIME = 1;
     private static final String SAVED_SUBTITLE_VISIBLE = "subtitle";
+
+    /**
+     *
+     * Required interface for hosting activities
+     */
+    public interface Callbacks{
+        void onCrimeSelected(Crime crime);
+    }
+
+    @Override
+    public void onAttach(Context context)
+    {
+        super.onAttach(context);
+        mCallbacks = (Callbacks)context;
+    }
 
     @Override
     public void onCreate( Bundle savedInstanceState) {
@@ -67,10 +89,20 @@ public class CrimeListFragment extends Fragment {
         public void onClick(View v) {
             //starting a new Activity of Crime when clicked
 //            Intent intent = CrimeActivity.newIntent(getActivity(), mCrime.getId());
-            Intent intent = CrimePagerActivity.newIntent(getActivity(), mCrime.getId());
+
 //            Intent intent = new Intent(getActivity(), CrimeActivity.class);
-            startActivity(intent);
+
+//            Intent intent = CrimePagerActivity.newIntent(getActivity(), mCrime.getId());
+//            startActivity(intent);
+
 //            startActivityForResult(intent, REQUEST_CRIME);
+
+            //stick a new CrimeFragment in the activity's layout
+//            Fragment fragment = CrimeFragment.newInstance(mCrime.getId());
+//            FragmentManager fm = getActivity().getSupportFragmentManager();
+//            fm.beginTransaction().add(R.id.detail_fragment_container, fragment).commit();
+
+            mCallbacks.onCrimeSelected(mCrime);
         }
     }
 
@@ -144,6 +176,12 @@ public class CrimeListFragment extends Fragment {
     }
 
     @Override
+    public void onDetach() {
+        super.onDetach();
+        mCallbacks = null;
+    }
+
+    @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         super.onCreateOptionsMenu(menu, inflater);
         inflater.inflate(R.menu.fragment_crime_list, menu);
@@ -164,8 +202,10 @@ public class CrimeListFragment extends Fragment {
             case R.id.new_crime:
                 Crime crime = new Crime();
                 CrimeLab.get(getActivity()).addCrime(crime);
-                Intent intent = CrimePagerActivity.newIntent(getActivity(), crime.getId());
-                startActivity(intent);
+//                Intent intent = CrimePagerActivity.newIntent(getActivity(), crime.getId());
+//                startActivity(intent);
+                updateUI();
+                mCallbacks.onCrimeSelected(crime);
                 return true;
             case R.id.show_subtitle:
                 mSubtitleVisible = !mSubtitleVisible;
@@ -191,6 +231,8 @@ public class CrimeListFragment extends Fragment {
         AppCompatActivity activity = (AppCompatActivity) getActivity();
         activity.getSupportActionBar().setSubtitle(subtitle);
     }
+
+
 
     private void updateUI()
     {
