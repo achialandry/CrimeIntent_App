@@ -1,6 +1,7 @@
 package com.bignerdranch.android.criminalintent;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
@@ -47,12 +48,21 @@ public class CrimeFragment extends Fragment {
     private Button mReportButton;
     private ImageButton mPhotoButton;
     private ImageView mPhotoView;
+    private Callbacks mCallbacks;
     private static final String ARG_CRIME_ID = "crime_id";
     private static final String DIALOG_DATE = "DialogDate";
 
     private static final int REQUEST_DATE = 0;
     private static final int REQUEST_CONTACT = 1;
     private static final int REQUEST_PHOTO = 2;
+
+
+    /**
+     * Required interface for hosting activities
+     */
+    public interface Callbacks {
+        void onCrimeUpdated(Crime crime);
+    }
 
     public static CrimeFragment newInstance(UUID crimeId)
     {
@@ -62,6 +72,12 @@ public class CrimeFragment extends Fragment {
         CrimeFragment fragment = new CrimeFragment();
         fragment.setArguments(args);
         return fragment;
+    }
+
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        mCallbacks = (Callbacks) context;
     }
 
     public void returnResult(){
@@ -103,6 +119,7 @@ public class CrimeFragment extends Fragment {
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
                 mCrime.setTitle(s.toString());
+                updateCrime();
             }
 
             @Override
@@ -137,6 +154,7 @@ public class CrimeFragment extends Fragment {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 mCrime.setSolved(isChecked);
+                updateCrime();
             }
         });
 
@@ -211,6 +229,12 @@ public class CrimeFragment extends Fragment {
         CrimeLab.get(getActivity()).updateCrime(mCrime);
     }
 
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        mCallbacks = null;
+    }
+
     //overriding the onActivityResult to retrieve the extra from DatePickerFragment.java and set the date on the Crime and refresh the text of the date button
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -223,6 +247,7 @@ public class CrimeFragment extends Fragment {
         {
             Date date = (Date) data.getSerializableExtra(DatePickerFragment.EXTRA_DATE);
             mCrime.setDate(date);
+            updateCrime();
 
             //code that sets button text is identical to code on onCreateView hence date could be set on two place
             //so we encapsulate in a private method
@@ -247,6 +272,7 @@ public class CrimeFragment extends Fragment {
                 c.moveToFirst();
                 String suspect = c.getString(0);
                 mCrime.setSuspect(suspect);
+                updateCrime();
                 mSuspectButton.setText(suspect);
             } finally {
                 c.close();
@@ -256,8 +282,14 @@ public class CrimeFragment extends Fragment {
 
             getActivity().revokeUriPermission(uri, Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
 
+            updateCrime();
             updatePhotoView();
         }
+    }
+
+    private void updateCrime(){
+        CrimeLab.get(getActivity()).updateCrime(mCrime);
+        mCallbacks.onCrimeUpdated(mCrime);
     }
 
     private void updateDate() {
@@ -287,12 +319,15 @@ public class CrimeFragment extends Fragment {
         return report;
     }
 
-    private void updatePhotoView(){
+    public void updatePhotoView(){
         if (mPhotoFile == null || !mPhotoFile.exists()){
             mPhotoView.setImageDrawable(null);
         }else {
             Bitmap bitmap = PictureUtils.getScaledBitmap(mPhotoFile.getPath(), getActivity());
             mPhotoView.setImageBitmap(bitmap);
         }
+
     }
+
+
 }
